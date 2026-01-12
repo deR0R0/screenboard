@@ -129,6 +129,23 @@ async function mouseUpHandler() {
   console.log("released mouse!")
 }
 
+async function handleAppShortcuts(event: KeyboardEvent | null) {
+  if(event === null) return;
+  
+  switch(event.key) {
+    case "a":
+      currentDrawingMode = DrawingMode.PEN;
+      console.log("Switched to pen mode");
+      break;
+    case "s":
+      currentDrawingMode = DrawingMode.ERASER;
+      console.log("Switched to eraser mode");
+      break;
+    default:
+      break;
+  }
+}
+
 async function clickThruShortcut(event: ShortcutEvent | null) {
   if(event !== null && event.state !== "Pressed") {
     return; // skip released
@@ -148,4 +165,5 @@ window.addEventListener("DOMContentLoaded", () => {
   
   // create our shortcuts
   register('F6', clickThruShortcut);
+  document.addEventListener("keydown", handleAppShortcuts);
 });
