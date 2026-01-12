@@ -1,4 +1,5 @@
 import { PhysicalSize, Window, currentMonitor, PhysicalPosition } from "@tauri-apps/api/window";
+import { register, ShortcutEvent } from "@tauri-apps/plugin-global-shortcut";
 
 // setup
 var isIgnoringMouseEvents: boolean = false;
@@ -128,19 +129,23 @@ async function mouseUpHandler() {
   console.log("released mouse!")
 }
 
-async function keyHandler(event: KeyboardEvent) {
-  // toggle ignoring cursor events with F6
-  if(event.key === "F6") {
-    isIgnoringMouseEvents = !isIgnoringMouseEvents;
-    await setIgnoreCursorEvents(isIgnoringMouseEvents);
-    console.log(`Ignoring mouse events: ${isIgnoringMouseEvents}`);
+async function clickThruShortcut(event: ShortcutEvent | null) {
+  if(event !== null && event.state !== "Pressed") {
+    return; // skip released
   }
+
+  isIgnoringMouseEvents = !isIgnoringMouseEvents;
+  await setIgnoreCursorEvents(isIgnoringMouseEvents);
+  console.log(`Toggled click-through mode: ${isIgnoringMouseEvents}`);
 }
 
 window.addEventListener("DOMContentLoaded", () => {
   setupWindow();
+  // create drawing stuff
   document.addEventListener("mousedown", mouseDownHandler);
   document.addEventListener("mousemove", mouseMoveHandler);
   document.addEventListener("mouseup", mouseUpHandler);
-  document.addEventListener("keydown", keyHandler);
+  
+  // create our shortcuts
+  register('F6', clickThruShortcut);
 });

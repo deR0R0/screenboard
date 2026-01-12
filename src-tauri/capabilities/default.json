@@ -8,6 +8,9 @@
     "core:window:allow-set-size",
     "core:window:allow-set-position",
     "core:window:allow-set-ignore-cursor-events",
-    "opener:default"
+    "opener:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-is-registered",
+    "global-shortcut:allow-unregister"
   ]
 }
