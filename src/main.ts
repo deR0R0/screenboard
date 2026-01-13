@@ -104,24 +104,6 @@ async function mouseDownHandler(event: MouseEvent | null) {
   console.log("pressed mouse!");
 }
 
-async function mouseMoveHandler(event: MouseEvent | null) {
-  // pen mode
-  if(currentlyDrawing && currentDrawingMode === DrawingMode.PEN) {
-    drawPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
-  }
-
-  // eraser mode
-  if(currentlyDrawing && currentDrawingMode === DrawingMode.ERASER) {
-    eraseAt(event!.clientX, event!.clientY, penSize);
-  }
-
-  // update cursor position
-  const cursor = document.getElementById("cursor") as HTMLDivElement;
-  if(cursor) {
-    cursor.style.transform = `translate(${event!.clientX - cursor.offsetWidth / 2}px, ${event!.clientY - cursor.offsetHeight / 2}px)`;
-  }
-}
-
 async function mouseUpHandler() {
   if(currentlyDrawing)
     currentlyDrawing = false;
@@ -133,6 +115,41 @@ async function mouseUpHandler() {
   }
 
   console.log("released mouse!")
+}
+
+async function pointerEventHandler(event: PointerEvent | null) {
+  // fill in coalesced events if empty
+  if(event?.getCoalescedEvents().length === 0) {
+    event?.getCoalescedEvents().push(event);
+  }
+
+  // process each coalesced event
+  for(const e of event!.getCoalescedEvents()) {
+    // pen mode
+    if(currentlyDrawing && currentDrawingMode === DrawingMode.PEN) {
+      drawPen(e.clientX, e.clientY, lastX, lastY, penColor, penSize);
+    }
+
+    // eraser mode
+    if(currentlyDrawing && currentDrawingMode === DrawingMode.ERASER) {
+      eraseAt(e.clientX, e.clientY, penSize);
+    }
+
+    // update cursor position
+    const cursor = document.getElementById("cursor") as HTMLDivElement;
+    if(cursor) {
+      cursor.style.transform = `translate(${e.clientX - cursor.offsetWidth / 2}px, ${e.clientY - cursor.offsetHeight / 2}px)`;
+    }
+  }
+}
+
+async function clearCanvas() {
+  const canvas = document.getElementById("board") as HTMLCanvasElement;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    console.log("Cleared the canvas");
+  }
 }
 
 async function handleAppShortcuts(event: KeyboardEvent | null) {
@@ -149,12 +166,7 @@ async function handleAppShortcuts(event: KeyboardEvent | null) {
       break;
     case 'z':
       // clear the canvas
-      const canvas = document.getElementById("board") as HTMLCanvasElement;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        console.log("Cleared the canvas");
-      }
+      await clearCanvas();
       break;
     case '=':
       penSize += 1;
@@ -183,7 +195,7 @@ window.addEventListener("DOMContentLoaded", () => {
   setupWindow();
   // create drawing stuff
   document.addEventListener("mousedown", mouseDownHandler);
-  document.addEventListener("mousemove", mouseMoveHandler);
+  document.addEventListener("pointermove", pointerEventHandler);
   document.addEventListener("mouseup", mouseUpHandler);
   
   // create our shortcuts
