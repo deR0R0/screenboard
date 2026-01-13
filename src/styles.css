@@ -36,10 +36,12 @@ body {
   top: 0;
   width: 32px;
   height: 32px;
+  border-width: 2px;
+  border-color: transparent;
   background-color: red;
   background-size: contain;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 99;
   will-change: transform;
   contain: layout style;
 }

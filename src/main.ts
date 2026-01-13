@@ -152,29 +152,81 @@ async function clearCanvas() {
   }
 }
 
+async function resizeCursor() {
+  // update cursor size visually
+  const cursor = document.getElementById("cursor") as HTMLDivElement;
+  if(cursor) {
+    cursor.style.width = `${penSize * 2}px`;
+    cursor.style.height = `${penSize * 2}px`;
+  }
+}
+
+async function changeCursorAppearance(borderRadius: string, borderColor?: string, fillColor?: string) {
+  const cursor = document.getElementById("cursor") as HTMLDivElement;
+
+  if(!cursor)
+    return;
+
+  cursor.style.borderRadius = borderRadius;
+
+  if(borderColor !== undefined) {
+    cursor.style.borderColor = borderColor;
+  }
+
+  if(fillColor !== undefined) {
+    cursor.style.backgroundColor = fillColor;
+  }
+}
+
+async function setPenSize(size: number) {
+  penSize = size;
+  await resizeCursor();
+  console.log("Set pen size to " + penSize);
+}
+
+async function increasePenSize(increment: number = 1) {
+  penSize += increment;
+  await resizeCursor();
+  console.log("Increased pen size to " + penSize);
+}
+
+async function decreasePenSize(decrement: number = 1) {
+  penSize = Math.max(1, penSize - decrement);
+  await resizeCursor();
+  console.log("Decreased pen size to " + penSize);
+}
+
+async function switchToPenMode() {
+  currentDrawingMode = DrawingMode.PEN;
+  await changeCursorAppearance("100%", penColor, penColor);
+  console.log("Switched to pen mode");
+}
+
+async function switchToEraserMode() {
+  currentDrawingMode = DrawingMode.ERASER;
+  await changeCursorAppearance("50%", "white", "transparent");
+  console.log("Switched to eraser mode");
+}
+
 async function handleAppShortcuts(event: KeyboardEvent | null) {
   if(event === null) return;
   
   switch(event.key) {
     case "a":
-      currentDrawingMode = DrawingMode.PEN;
-      console.log("Switched to pen mode");
+      await switchToPenMode();
       break;
     case "s":
-      currentDrawingMode = DrawingMode.ERASER;
-      console.log("Switched to eraser mode");
+      await switchToEraserMode();
       break;
     case 'z':
       // clear the canvas
       await clearCanvas();
       break;
     case '=':
-      penSize += 1;
-      console.log("increasing pen size to " + penSize);
+      await increasePenSize();
       break;
     case '-':
-      penSize -= 1;
-      console.log("decreasing pen size to " + penSize);
+      await decreasePenSize();
       break;
     default:
       break;
@@ -191,8 +243,10 @@ async function clickThruShortcut(event: ShortcutEvent | null) {
   console.log(`Toggled click-through mode: ${isIgnoringMouseEvents}`);
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  setupWindow();
+window.addEventListener("DOMContentLoaded", async () => {
+  await setupWindow();
+  await resizeCursor();
+  await switchToPenMode();
   // create drawing stuff
   document.addEventListener("mousedown", mouseDownHandler);
   document.addEventListener("pointermove", pointerEventHandler);
