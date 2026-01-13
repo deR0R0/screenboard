@@ -29,3 +29,17 @@ body {
   height: 100vh;
   image-rendering: pixelated;
 }
+
+#cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  background-color: red;
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1000;
+  will-change: transform;
+  contain: layout style;
+}

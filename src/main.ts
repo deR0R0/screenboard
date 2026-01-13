@@ -114,6 +114,12 @@ async function mouseMoveHandler(event: MouseEvent | null) {
   if(currentlyDrawing && currentDrawingMode === DrawingMode.ERASER) {
     eraseAt(event!.clientX, event!.clientY, penSize);
   }
+
+  // update cursor position
+  const cursor = document.getElementById("cursor") as HTMLDivElement;
+  if(cursor) {
+    cursor.style.transform = `translate(${event!.clientX - cursor.offsetWidth / 2}px, ${event!.clientY - cursor.offsetHeight / 2}px)`;
+  }
 }
 
 async function mouseUpHandler() {
@@ -140,6 +146,23 @@ async function handleAppShortcuts(event: KeyboardEvent | null) {
     case "s":
       currentDrawingMode = DrawingMode.ERASER;
       console.log("Switched to eraser mode");
+      break;
+    case 'z':
+      // clear the canvas
+      const canvas = document.getElementById("board") as HTMLCanvasElement;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        console.log("Cleared the canvas");
+      }
+      break;
+    case '=':
+      penSize += 1;
+      console.log("increasing pen size to " + penSize);
+      break;
+    case '-':
+      penSize -= 1;
+      console.log("decreasing pen size to " + penSize);
       break;
     default:
       break;
