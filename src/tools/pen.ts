@@ -6,6 +6,7 @@ async function drawPen(toX: number, toY: number, fromX: number | null, fromY: nu
     return;
   }
 
+  ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = color;
   ctx.lineWidth = (size || 1) * 2;
   ctx.lineCap = "round";

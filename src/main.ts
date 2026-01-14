@@ -26,15 +26,20 @@ var lastY: number | null = null;
 
 async function mouseDownHandler(event: MouseEvent | null) {
   currentlyDrawing = true;
+
+  let result = undefined;
+
   if(currentDrawingMode === DrawingMode.PEN) {
-    const result = await drawPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
-    if(result) {
-      lastX = result.lastX;
-      lastY = result.lastY;
-    }
+    result = await drawPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
   }
-  if(currentDrawingMode === DrawingMode.ERASER)
-    await eraseAt(event!.clientX, event!.clientY, penSize);
+  if(currentDrawingMode === DrawingMode.ERASER) {
+    result = await eraseAt(event!.clientX, event!.clientY, lastX, lastY, penSize);
+  }
+
+  if(result) {
+    lastX = result.lastX;
+    lastY = result.lastY;
+  }
   
   console.log("pressed mouse!");
 }
@@ -44,10 +49,8 @@ async function mouseUpHandler() {
     currentlyDrawing = false;
 
   // reset the last positions :-)
-  if(currentDrawingMode === DrawingMode.PEN) {
-    lastX = null;
-    lastY = null;
-  }
+  lastX = null;
+  lastY = null;
 
   console.log("released mouse!")
 }
@@ -60,14 +63,22 @@ async function pointerEventHandler(event: PointerEvent | null) {
 
   // process each coalesced event
   for(const e of event!.getCoalescedEvents()) {
+
+    let result = undefined;
+
     // pen mode
     if(currentlyDrawing && currentDrawingMode === DrawingMode.PEN) {
-      drawPen(e.clientX, e.clientY, lastX, lastY, penColor, penSize);
+      result = await drawPen(e.clientX, e.clientY, lastX, lastY, penColor, penSize);
     }
 
     // eraser mode
     if(currentlyDrawing && currentDrawingMode === DrawingMode.ERASER) {
-      eraseAt(e.clientX, e.clientY, penSize);
+      result = await eraseAt(e.clientX, e.clientY, lastX, lastY, penSize);
+    }
+
+    if(result) {
+      lastX = result.lastX;
+      lastY = result.lastY;
     }
 
     // update cursor position
@@ -157,12 +168,6 @@ async function handleAppShortcuts(event: KeyboardEvent | null) {
       // clear the canvas
       await clearCanvas();
       break;
-    case '=':
-      await increasePenSize();
-      break;
-    case '-':
-      await decreasePenSize();
-      break;
     default:
       break;
   }
@@ -176,6 +181,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("mousedown", mouseDownHandler);
   document.addEventListener("pointermove", pointerEventHandler);
   document.addEventListener("mouseup", mouseUpHandler);
+
+  document.addEventListener("wheel", async (event: WheelEvent) => {
+    if(event.deltaY < 0) {
+      await increasePenSize();
+    } else if(event.deltaY > 0) {
+      await decreasePenSize();
+    }
+  });
   
   // create our shortcuts
   register('F6', clickThruShortcut);
