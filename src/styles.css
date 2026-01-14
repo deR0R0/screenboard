@@ -29,6 +29,7 @@ body {
   width: 100vw;
   height: 100vh;
   image-rendering: pixelated;
+  cursor: none;
 }
 
 #cursor {
@@ -37,12 +38,20 @@ body {
   top: 0;
   width: 32px;
   height: 32px;
-  border-width: 2px;
-  border-color: transparent;
+  border-style: solid;
+  border-width: 1px;
+  border-color: white;
   background-color: red;
   background-size: contain;
   pointer-events: none;
   z-index: 99;
   will-change: transform;
   contain: layout style;
+}
+
+#toolbar {
+  position: absolute;
+  top: 20px;
+  left: 10px;
+  z-index: 999;
 }

@@ -35,6 +35,7 @@ async function mouseDownHandler(event: MouseEvent | null) {
 
   if(currentDrawingMode === DrawingMode.PEN) {
     result = await drawPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
+    await changeCursorAppearance("100%", penColor, "1px", penColor);
   }
   if(currentDrawingMode === DrawingMode.ERASER) {
     result = await eraseAt(event!.clientX, event!.clientY, lastX, lastY, penSize);
@@ -51,6 +52,11 @@ async function mouseDownHandler(event: MouseEvent | null) {
 async function mouseUpHandler() {
   if(currentlyDrawing)
     currentlyDrawing = false;
+
+  // reset the outline after drawing
+  if(currentDrawingMode === DrawingMode.PEN) {
+    await changeCursorAppearance("100%", "white", "1px", penColor);
+  }
 
   // reset the last positions :-)
   lastX = null;
@@ -116,7 +122,7 @@ async function resizeCursor() {
   }
 }
 
-async function changeCursorAppearance(borderRadius: string, borderColor?: string, fillColor?: string) {
+async function changeCursorAppearance(borderRadius: string, borderColor?: string, borderWidth?: string, fillColor?: string) {
   const cursor = document.getElementById("cursor") as HTMLDivElement;
 
   if(!cursor)
@@ -126,6 +132,10 @@ async function changeCursorAppearance(borderRadius: string, borderColor?: string
 
   if(borderColor !== undefined) {
     cursor.style.borderColor = borderColor;
+  }
+
+  if(borderWidth !== undefined) {
+    cursor.style.borderWidth = borderWidth;
   }
 
   if(fillColor !== undefined) {
@@ -153,13 +163,13 @@ async function decreasePenSize(decrement: number = 1) {
 
 async function switchToPenMode() {
   currentDrawingMode = DrawingMode.PEN;
-  await changeCursorAppearance("100%", penColor, penColor);
+  await changeCursorAppearance("100%", "white", "1px", penColor);
   console.log("Switched to pen mode");
 }
 
 async function switchToEraserMode() {
   currentDrawingMode = DrawingMode.ERASER;
-  await changeCursorAppearance("50%", "white", "transparent");
+  await changeCursorAppearance("50%", "white", "1px", "transparent");
   console.log("Switched to eraser mode");
 }
 
