@@ -24,6 +24,10 @@ var penColor: string = "black";
 var lastX: number | null = null;
 var lastY: number | null = null;
 
+// track mouse position for other functions
+var mouseX: number = 0;
+var mouseY: number = 0;
+
 async function mouseDownHandler(event: MouseEvent | null) {
   currentlyDrawing = true;
 
@@ -86,6 +90,10 @@ async function pointerEventHandler(event: PointerEvent | null) {
     if(cursor) {
       cursor.style.transform = `translate(${e.clientX - cursor.offsetWidth / 2}px, ${e.clientY - cursor.offsetHeight / 2}px)`;
     }
+
+    // update global mouse position
+    mouseX = e.clientX;
+    mouseY = e.clientY;
   }
 }
 
@@ -104,6 +112,7 @@ async function resizeCursor() {
   if(cursor) {
     cursor.style.width = `${penSize * 2}px`;
     cursor.style.height = `${penSize * 2}px`;
+    cursor.style.transform = `translate(${mouseX - cursor.offsetWidth / 2}px, ${mouseY - cursor.offsetHeight / 2}px)`;
   }
 }
 
