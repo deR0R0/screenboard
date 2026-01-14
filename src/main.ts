@@ -1,5 +1,7 @@
 import { setupWindow, clickThruShortcut } from "./window";
 import { register } from "@tauri-apps/plugin-global-shortcut";
+import { drawPen } from "./tools/pen";
+import { eraseAt } from "./tools/eraser";
 
 // setup
 
@@ -22,56 +24,18 @@ var penColor: string = "black";
 var lastX: number | null = null;
 var lastY: number | null = null;
 
-
-
-async function drawPen(toX: number, toY: number, fromX: number | null, fromY: number | null, color: string, size?: number) {
-  const canvas = document.getElementById("board") as HTMLCanvasElement;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    console.warn("Can't get canvas context");
-    return;
-  }
-
-  ctx.fillStyle = color;
-  ctx.lineWidth = (size || 1) * 2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  // protection, draw only if fromX and fromY are null
-  if(fromX === null || fromY === null) {
-    fromX = toX + 1; // offset it slightly to draw a dot
-    fromY = toY + 1; 
-  }
-
-  // draw line from last position to current position
-  ctx.beginPath();
-  ctx.moveTo(fromX, fromY);
-  ctx.lineTo(toX, toY);
-  ctx.strokeStyle = color;
-  ctx.stroke();
-
-  // update last positions
-  lastX = toX;
-  lastY = toY;
-}
-
-async function eraseAt(x: number, y: number, size: number) {
-  const canvas = document.getElementById("board") as HTMLCanvasElement;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    console.warn("Can't get canvas context");
-    return;
-  }
-
-  ctx.clearRect(x - size / 2, y - size / 2, size*2, size*2);
-}
-
 async function mouseDownHandler(event: MouseEvent | null) {
   currentlyDrawing = true;
-  if(currentDrawingMode === DrawingMode.PEN)
-    drawPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
+  if(currentDrawingMode === DrawingMode.PEN) {
+    const result = await drawPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
+    if(result) {
+      lastX = result.lastX;
+      lastY = result.lastY;
+    }
+  }
   if(currentDrawingMode === DrawingMode.ERASER)
-    eraseAt(event!.clientX, event!.clientY, penSize);
+    await eraseAt(event!.clientX, event!.clientY, penSize);
+  
   console.log("pressed mouse!");
 }
 
