@@ -1,8 +1,7 @@
-import { PhysicalSize, Window, currentMonitor, PhysicalPosition } from "@tauri-apps/api/window";
-import { register, ShortcutEvent } from "@tauri-apps/plugin-global-shortcut";
+import { setupWindow, clickThruShortcut } from "./window";
+import { register } from "@tauri-apps/plugin-global-shortcut";
 
 // setup
-var isIgnoringMouseEvents: boolean = false;
 
 // drawing mode enums
 enum DrawingMode {
@@ -23,33 +22,7 @@ var penColor: string = "black";
 var lastX: number | null = null;
 var lastY: number | null = null;
 
-async function setupWindow() {
-  const curr_win = await Window.getCurrent();
-  const curr_mon = await currentMonitor();
 
-  if (!curr_mon) {
-    console.warn("Can't find current monitor");
-    return;
-  }
-
-  const { width, height } = curr_mon.size;
-  const { x, y } = curr_mon.position;
-
-  // set the size to the thingy yeah
-  await curr_win.setSize(new PhysicalSize(width, height));
-  await curr_win.setPosition(new PhysicalPosition(x, y));
-  await setIgnoreCursorEvents(isIgnoringMouseEvents);
-
-  // fix canvas size
-  const canvas = document.getElementById("board") as HTMLCanvasElement;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
-async function setIgnoreCursorEvents(ignore: boolean) {
-  const curr_win = await Window.getCurrent();
-  await curr_win.setIgnoreCursorEvents(ignore);
-}
 
 async function drawPen(toX: number, toY: number, fromX: number | null, fromY: number | null, color: string, size?: number) {
   const canvas = document.getElementById("board") as HTMLCanvasElement;
@@ -66,10 +39,8 @@ async function drawPen(toX: number, toY: number, fromX: number | null, fromY: nu
 
   // protection, draw only if fromX and fromY are null
   if(fromX === null || fromY === null) {
-    ctx.fillRect(toX, toY, size || 1, size || 1);
-    lastX = toX;
-    lastY = toY;
-    return;
+    fromX = toX + 1; // offset it slightly to draw a dot
+    fromY = toY + 1; 
   }
 
   // draw line from last position to current position
@@ -177,13 +148,13 @@ async function changeCursorAppearance(borderRadius: string, borderColor?: string
     cursor.style.backgroundColor = fillColor;
   }
 }
-
+/*
 async function setPenSize(size: number) {
   penSize = size;
   await resizeCursor();
   console.log("Set pen size to " + penSize);
 }
-
+*/
 async function increasePenSize(increment: number = 1) {
   penSize += increment;
   await resizeCursor();
@@ -231,16 +202,6 @@ async function handleAppShortcuts(event: KeyboardEvent | null) {
     default:
       break;
   }
-}
-
-async function clickThruShortcut(event: ShortcutEvent | null) {
-  if(event !== null && event.state !== "Pressed") {
-    return; // skip released
-  }
-
-  isIgnoringMouseEvents = !isIgnoringMouseEvents;
-  await setIgnoreCursorEvents(isIgnoringMouseEvents);
-  console.log(`Toggled click-through mode: ${isIgnoringMouseEvents}`);
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
