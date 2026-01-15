@@ -42,6 +42,10 @@ async function mouseDownHandler(event: MouseEvent | null) {
     return;
   }
 
+  if((event?.target as HTMLElement).closest("#toolbar")) {
+    return; // do nothing if other parts of toolbar are clicked
+  }
+
   // drawing stuff
   currentlyDrawing = true;
 
