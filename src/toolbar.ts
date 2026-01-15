@@ -1,3 +1,5 @@
+import gsap from "gsap";
+
 var isSelected: boolean = false;
 var offsetX: number = 0;
 var offsetY: number = 0;
@@ -33,4 +35,13 @@ async function releaseToolbar() {
     isSelected = false;
 }
 
-export { selectToolbar, moveToolbar, releaseToolbar, isDraggingToolbar };
+async function toggleToolbar() {
+    const toolbox = document.getElementById("toolbar") as HTMLDivElement;
+    if(toolbox.style.height === "37px") {
+        gsap.to(toolbox, {height: "250px", ease: "elastic.out(0.6, 0.3)", duration: 1});
+    } else if(toolbox.style.height === "250px" || toolbox.style.height === "") { // close but also prevent spamming
+        gsap.to(toolbox, {height: "37px", ease: "elastic.out(0.6, 0.3)", duration: 1});
+    }
+}
+
+export { selectToolbar, moveToolbar, releaseToolbar, isDraggingToolbar, toggleToolbar };
