@@ -11,7 +11,19 @@
   <body>
     <main class="main-content">
       <div id="cursor"></div>
-      <div id="toolbar" draggable="true">
+      <div id="toolbar">
+        <div id="toolbar-header-region">
+          <button id="drag-region">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="transform: rotate(90deg); user-select: none;">
+              <path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+          </button>
+          <button id="open-toolbox">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="16" height="16" fill="currentColor">
+              <path d="M64 128c0-18.6 12.9-34.8 31.2-39.3L320 32l224.8 56.7c18.3 4.5 31.2 20.7 31.2 39.3l0 44.6-128 32.6c-27.9 7.1-57.6-4.7-72.5-29l-55-91.6-55 91.6c-14.9 24.3-44.6 36.1-72.5 29L64 172.6l0-44.6zM64 172.6l128 32.6c27.9 7.1 57.6-4.7 72.5-29L320 128l55.5 48.6c14.9 24.3 44.6 36.1 72.5 29L576 172.6l0 205.9c0 22-15 41.2-36.4 46.6l-204.1 51c-10.2 2.6-20.9 2.6-31 0l-204.1-51C79 419.7 64 400.5 64 378.5l0-205.9z"/>
+            </svg>
+          </button>
+        </div>
         <button id="pen-button" class="toolbar-button">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="currentColor">
             <path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z" />
@@ -24,11 +36,15 @@
         </button>
         <input type="color" id="color-picker" class="toolbar-input" value="#000000" />
         <input type="range" id="size-slider" class="toolbar-input" min="1" max="50" value="5" />
-        <button id="clear-button" class="toolbar-button">Clear</button>
+        <button id="clear-button" class="toolbar-button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="16" height="16" fill="currentColor">
+            <path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0L284.2 0c12.1 0 23.2 6.8 28.6 17.7L320 32l96 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 7.2-14.3zM32 128l384 0 0 320c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-320zm96 64c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16z" />
+          </svg>
+        </button>
       </div>
-      <canvas id="board">
-        
-      </canvas>
+
+
+      <canvas id="board"></canvas>
     </main>
   </body>
 </html>

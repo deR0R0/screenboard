@@ -2,6 +2,7 @@ import { setupWindow, clickThruShortcut } from "./window";
 import { register } from "@tauri-apps/plugin-global-shortcut";
 import { drawPen } from "./tools/pen";
 import { eraseAt } from "./tools/eraser";
+import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar } from "./toolbar";
 
 // setup
 
@@ -29,6 +30,13 @@ var mouseX: number = 0;
 var mouseY: number = 0;
 
 async function mouseDownHandler(event: MouseEvent | null) {
+  // prevent drawing or other of any kind before moving toolbar
+  if((event?.target as HTMLElement).closest("#drag-region")) {
+    await selectToolbar(event!.clientX, event!.clientY, event?.target as HTMLElement | null);
+    return;
+  }
+
+  // drawing stuff
   currentlyDrawing = true;
 
   let result = undefined;
@@ -45,7 +53,8 @@ async function mouseDownHandler(event: MouseEvent | null) {
     lastX = result.lastX;
     lastY = result.lastY;
   }
-  
+
+  // log
   console.log("pressed mouse!");
 }
 
@@ -62,6 +71,8 @@ async function mouseUpHandler() {
   lastX = null;
   lastY = null;
 
+  await releaseToolbar();
+
   console.log("released mouse!")
 }
 
@@ -73,8 +84,23 @@ async function pointerEventHandler(event: PointerEvent | null) {
 
   // process each coalesced event
   for(const e of event!.getCoalescedEvents()) {
+    // update global mouse position
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+
+    // update cursor position
+    const cursor = document.getElementById("cursor") as HTMLDivElement;
+    if(cursor) {
+      cursor.style.transform = `translate(${e.clientX - cursor.offsetWidth / 2}px, ${e.clientY - cursor.offsetHeight / 2}px)`;
+    }
 
     let result = undefined;
+
+    if(await isDraggingToolbar()) {
+      // move ze toolbar
+      await moveToolbar(e.clientX, e.clientY);
+      return;
+    }
 
     // pen mode
     if(currentlyDrawing && currentDrawingMode === DrawingMode.PEN) {
@@ -90,16 +116,6 @@ async function pointerEventHandler(event: PointerEvent | null) {
       lastX = result.lastX;
       lastY = result.lastY;
     }
-
-    // update cursor position
-    const cursor = document.getElementById("cursor") as HTMLDivElement;
-    if(cursor) {
-      cursor.style.transform = `translate(${e.clientX - cursor.offsetWidth / 2}px, ${e.clientY - cursor.offsetHeight / 2}px)`;
-    }
-
-    // update global mouse position
-    mouseX = e.clientX;
-    mouseY = e.clientY;
   }
 }
 
