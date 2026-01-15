@@ -3,6 +3,7 @@ import { register } from "@tauri-apps/plugin-global-shortcut";
 import { drawPen } from "./tools/pen";
 import { eraseAt } from "./tools/eraser";
 import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar } from "./toolbar";
+import gsap from "gsap";
 
 // setup
 
@@ -33,6 +34,17 @@ async function mouseDownHandler(event: MouseEvent | null) {
   // prevent drawing or other of any kind before moving toolbar
   if((event?.target as HTMLElement).closest("#drag-region")) {
     await selectToolbar(event!.clientX, event!.clientY, event?.target as HTMLElement | null);
+    return;
+  }
+
+  // if box button is clicked
+  if((event?.target as HTMLElement).closest("#open-toolbox")) {
+    const toolbox = document.getElementById("toolbar") as HTMLDivElement;
+    if(toolbox.style.height === "37px") {
+      gsap.to(toolbox, {height: "250px", ease: "elastic.out(0.6, 0.3)", duration: 1});
+    } else if(toolbox.style.height === "250px" || toolbox.style.height === "") { // close but also prevent spamming
+      gsap.to(toolbox, {height: "37px", ease: "elastic.out(0.6, 0.3)", duration: 1});
+    }
     return;
   }
 
