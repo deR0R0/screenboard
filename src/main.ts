@@ -3,23 +3,24 @@ import { register } from "@tauri-apps/plugin-global-shortcut";
 import { drawPen } from "./tools/pen";
 import { eraseAt } from "./tools/eraser";
 import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar, toggleToolbar } from "./toolbar";
-
-// setup
-
-// drawing mode enums
-enum DrawingMode {
-  PEN,
-  CALLIGRAPHY_PEN,
-  ERASER,
-  SQUARE,
-  ELLIPSE,
-}
+import { drawFountainPen } from "./fountainPen";
+import { DrawingMode } from "./types";
+import type { Action } from "./types";
 
 // drawing config
 var currentlyDrawing: boolean = false;
-var currentDrawingMode: number = DrawingMode.PEN;
+var currentDrawingMode: DrawingMode = DrawingMode.PEN;
 var penSize: number = 5;
 var penColor: string = "black";
+
+// architecture for undo/redo.
+// need this to track updates to the canvas.
+// active state is current drawing action
+// that, once the user releases the mouse,
+// it will be combined into one and added to
+// cemented history.
+var cementedHistory: Action[] = [];
+var activeState: Action[] = [];
 
 // track previous position for smooth line drawing
 var lastX: number | null = null;
@@ -52,9 +53,15 @@ async function mouseDownHandler(event: MouseEvent | null) {
   let result = undefined;
 
   if(currentDrawingMode === DrawingMode.PEN) {
-    result = await drawPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
+    //result = await drawPen({ toX: event!.clientX, toY: event!.clientY, fromX: lastX, fromY: lastY, color: penColor, size: penSize });
+    //await changeCursorAppearance("100%", penColor, "1px", penColor);
+  }
+
+  if(currentDrawingMode === DrawingMode.FOUNTAIN_PEN) {
+    result = await drawFountainPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
     await changeCursorAppearance("100%", penColor, "1px", penColor);
   }
+
   if(currentDrawingMode === DrawingMode.ERASER) {
     result = await eraseAt(event!.clientX, event!.clientY, lastX, lastY, penSize);
   }
@@ -114,7 +121,7 @@ async function pointerEventHandler(event: PointerEvent | null) {
 
     // pen mode
     if(currentlyDrawing && currentDrawingMode === DrawingMode.PEN) {
-      result = await drawPen(e.clientX, e.clientY, lastX, lastY, penColor, penSize);
+      result = await drawPen({ toX: e.clientX, toY: e.clientY, fromX: lastX, fromY: lastY, color: penColor, size: penSize });
     }
 
     // eraser mode
@@ -189,7 +196,7 @@ async function decreasePenSize(decrement: number = 1) {
 
 async function switchToPenMode() {
   currentDrawingMode = DrawingMode.PEN;
-  await changeCursorAppearance("100%", "white", "1px", penColor);
+  await changeCursorAppearance("100%", `color-mix(in srgb, ${penColor} 80%, white)`, "1px", penColor);
   console.log("Switched to pen mode");
 }
 

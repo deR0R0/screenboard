@@ -1,4 +1,13 @@
-async function drawPen(toX: number, toY: number, fromX: number | null, fromY: number | null, color: string, size?: number): Promise<void | { lastX: number; lastY: number; }> {
+interface PenParams {
+  toX: number;
+  toY: number;
+  fromX: number | null;
+  fromY: number | null;
+  color: string;
+  size?: number;
+}
+
+async function drawPen(params: PenParams): Promise<void | { lastX: number; lastY: number; }> {
   const canvas = document.getElementById("board") as HTMLCanvasElement;
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -7,26 +16,27 @@ async function drawPen(toX: number, toY: number, fromX: number | null, fromY: nu
   }
 
   ctx.globalCompositeOperation = "source-over";
-  ctx.fillStyle = color;
-  ctx.lineWidth = (size || 1) * 2;
+  ctx.fillStyle = params.color;
+  ctx.lineWidth = (params.size || 1) * 2;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
   // protection, draw only if fromX and fromY are null
-  if(fromX === null || fromY === null) {
-    fromX = toX + 1; // offset it slightly to draw a dot
-    fromY = toY + 1; 
+  if(params.fromX === null || params.fromY === null) {
+    params.fromX = params.toX + 1; // offset it slightly to draw a dot
+    params.fromY = params.toY + 1; 
   }
 
   // draw line from last position to current position
   ctx.beginPath();
-  ctx.moveTo(fromX, fromY);
-  ctx.lineTo(toX, toY);
-  ctx.strokeStyle = color;
+  ctx.moveTo(params.fromX, params.fromY);
+  ctx.lineTo(params.toX, params.toY);
+  ctx.strokeStyle = params.color;
   ctx.stroke();
 
   // update last positions
-  return { lastX: toX, lastY: toY };
+  return { lastX: params.toX, lastY: params.toY };
 }
 
 export { drawPen };
+export type { PenParams };
