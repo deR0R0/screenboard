@@ -175,23 +175,11 @@ async function changeCursorAppearance(borderRadius: string, borderColor?: string
     cursor.style.backgroundColor = fillColor;
   }
 }
-/*
+
 async function setPenSize(size: number) {
   penSize = size;
   await resizeCursor();
   console.log("Set pen size to " + penSize);
-}
-*/
-async function increasePenSize(increment: number = 1) {
-  penSize += increment;
-  await resizeCursor();
-  console.log("Increased pen size to " + penSize);
-}
-
-async function decreasePenSize(decrement: number = 1) {
-  penSize = Math.max(1, penSize - decrement);
-  await resizeCursor();
-  console.log("Decreased pen size to " + penSize);
 }
 
 async function switchToPenMode() {
@@ -236,9 +224,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   document.addEventListener("wheel", async (event: WheelEvent) => {
     if(event.deltaY < 0) {
-      await increasePenSize();
+      await setPenSize(penSize + 1);
     } else if(event.deltaY > 0) {
-      await decreasePenSize();
+      await setPenSize(Math.max(1, penSize - 1));
     }
   });
   
