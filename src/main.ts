@@ -6,6 +6,7 @@ import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar, toggleTo
 import { drawFountainPen } from "./fountainPen";
 import { DrawingMode } from "./types";
 import type { Action } from "./types";
+import { cubicBezier } from "./utils/catmullromSpline";
 
 // drawing config
 var currentlyDrawing: boolean = false;
@@ -208,6 +209,8 @@ async function handleAppShortcuts(event: KeyboardEvent | null) {
       // clear the canvas
       await clearCanvas();
       break;
+    case 't': // test
+      console.log("test")
     default:
       break;
   }
