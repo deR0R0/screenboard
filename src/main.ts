@@ -12,7 +12,7 @@ import { catmullromSpline, cubicBezier } from "./utils/catmullromSpline";
 var currentlyDrawing: boolean = false;
 var currentDrawingMode: DrawingMode = DrawingMode.PEN;
 var penSize: number = 5;
-var penColor: string = "black";
+var penColor: string = "white";
 var penQuality: number = 3;
 
 // cemented history
@@ -76,6 +76,7 @@ async function mouseDownHandler(event: MouseEvent | null) {
 
   if(currentDrawingMode === DrawingMode.PEN) {
     //result = await drawPen({ toX: event!.clientX, toY: event!.clientY, fromX: lastX, fromY: lastY, color: penColor, size: penSize });
+    await clearRawMousePoints();
     await pushRawMousePoint(event!.clientX, event!.clientY);
     await changeCursorAppearance("100%", penColor, "1px", penColor);
   }

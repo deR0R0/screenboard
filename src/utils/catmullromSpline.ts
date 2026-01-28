@@ -25,6 +25,14 @@ async function cubicBezier(params: SplineParams, size: number, quality: number =
     return points;
 }
 
+// calculation for next parameter index
+async function nextParameterIndex(currentIndex: number, p0: { x: number; y: number; }, p1: { x: number; y: number; }): Promise<number> {
+    const dx = p1.x - p0.x;
+    const dy = p1.y - p0.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    return currentIndex + Math.sqrt(distance);
+}
+
 // takes in a list of raw mouse points and returns a smoothed list of points using the Catmull-Rom spline algorithm
 async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: number, quality: number = 3): Promise<Array<{ x: number; y: number; }>> {
     const smoothedPoints: Array<{ x: number; y: number; }> = [];
@@ -39,14 +47,29 @@ async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: 
         const p2 = points[i + 2];
         const p3 = points[i + 3];
 
+        const t0 = 0;
+        const t1 = await nextParameterIndex(t0, p0, p1);
+        const t2 = await nextParameterIndex(t1, p1, p2);
+        const t3 = await nextParameterIndex(t2, p2, p3);
+
+        // calculate the tangents
+        const m1 = {
+            x: (p2.x - p0.x) / (t2 - t0) - (p2.x - p1.x) / (t2 - t1) + (p1.x - p0.x) / (t1 - t0),
+            y: (p2.y - p0.y) / (t2 - t0) - (p2.y - p1.y) / (t2 - t1) + (p1.y - p0.y) / (t1 - t0),
+        };
+        const m2 = {
+            x: (p3.x - p1.x) / (t3 - t1) - (p3.x - p2.x) / (t3 - t2) + (p2.x - p1.x) / (t2 - t1),
+            y: (p3.y - p1.y) / (t3 - t1) - (p3.y - p2.y) / (t3 - t2) + (p2.y - p1.y) / (t2 - t1),
+        };
+
         // calculate control points for the cubic bezier curve
         const cp1 = {
-            x: p1.x + (p2.x - p0.x) / 6,
-            y: p1.y + (p2.y - p0.y) / 6,
+            x: p1.x + (m1.x * (t2 - t1)) / 3,
+            y: p1.y + (m1.y * (t2 - t1)) / 3,
         };
         const cp2 = {
-            x: p2.x - (p3.x - p1.x) / 6,
-            y: p2.y - (p3.y - p1.y) / 6,
+            x: p2.x - (m2.x * (t2 - t1)) / 3,
+            y: p2.y - (m2.y * (t2 - t1)) / 3,
         };
 
         // generate cubic bezier points between p1 and p2
