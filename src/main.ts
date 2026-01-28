@@ -1,27 +1,23 @@
 import { setupWindow, clickThruShortcut } from "./window";
 import { register } from "@tauri-apps/plugin-global-shortcut";
-import { drawPen } from "./tools/pen";
+import { renderPen, getRawMousePoints, pushRawMousePoint, clearRawMousePoints } from "./tools/pen";
 import { eraseAt } from "./tools/eraser";
 import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar, toggleToolbar } from "./toolbar";
 import { drawFountainPen } from "./fountainPen";
 import { DrawingMode } from "./types";
-import type { Action } from "./types";
-import { cubicBezier } from "./utils/catmullromSpline";
+import type { Action, PenAction } from "./types";
+import { catmullromSpline, cubicBezier } from "./utils/catmullromSpline";
 
 // drawing config
 var currentlyDrawing: boolean = false;
 var currentDrawingMode: DrawingMode = DrawingMode.PEN;
 var penSize: number = 5;
 var penColor: string = "black";
+var penQuality: number = 3;
 
-// architecture for undo/redo.
-// need this to track updates to the canvas.
-// active state is current drawing action
-// that, once the user releases the mouse,
-// it will be combined into one and added to
-// cemented history.
+// cemented history
 var cementedHistory: Action[] = [];
-var activeState: Action[] = [];
+var activeState: Action[] = []; // TODO: implement active state along with the active canvas
 
 // track previous position for smooth line drawing
 var lastX: number | null = null;
@@ -30,6 +26,31 @@ var lastY: number | null = null;
 // track mouse position for other functions
 var mouseX: number = 0;
 var mouseY: number = 0;
+
+
+async function render() {
+  // clear canvas
+  const canvas = document.getElementById("board") as HTMLCanvasElement;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    console.warn("Can't get canvas context");
+    return;
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  console.log(cementedHistory);
+
+  // render cemented history
+  for(const action of cementedHistory) {
+    if(action.type === DrawingMode.PEN) {
+      const penAction = action as PenAction;
+      // run the catmull-rom spline on the mouse points
+      const splinePoints = await catmullromSpline(penAction.points, penSize, penQuality);
+      // render the pen action
+      await renderPen(splinePoints, penAction.color, penAction.size);
+    }
+  }
+}
 
 async function mouseDownHandler(event: MouseEvent | null) {
   // prevent drawing or other of any kind before moving toolbar
@@ -55,11 +76,7 @@ async function mouseDownHandler(event: MouseEvent | null) {
 
   if(currentDrawingMode === DrawingMode.PEN) {
     //result = await drawPen({ toX: event!.clientX, toY: event!.clientY, fromX: lastX, fromY: lastY, color: penColor, size: penSize });
-    //await changeCursorAppearance("100%", penColor, "1px", penColor);
-  }
-
-  if(currentDrawingMode === DrawingMode.FOUNTAIN_PEN) {
-    result = await drawFountainPen(event!.clientX, event!.clientY, lastX, lastY, penColor, penSize);
+    await pushRawMousePoint(event!.clientX, event!.clientY);
     await changeCursorAppearance("100%", penColor, "1px", penColor);
   }
 
@@ -83,6 +100,22 @@ async function mouseUpHandler() {
   // reset the outline after drawing
   if(currentDrawingMode === DrawingMode.PEN) {
     await changeCursorAppearance("100%", "white", "1px", penColor);
+
+    // push the raw mouse points to the cemented history
+    
+    // get points and clear
+    const points = [...await clearRawMousePoints()];
+    
+    // create a new action
+    const action: PenAction = {
+      type: DrawingMode.PEN,
+      points: points,
+      color: penColor,
+      size: penSize,
+      timestamp: Date.now()
+    }
+
+    cementedHistory.push(action);
   }
 
   // reset the last positions :-)
@@ -91,7 +124,10 @@ async function mouseUpHandler() {
 
   await releaseToolbar();
 
-  console.log("released mouse!")
+  // render our cemented history for testing
+  console.log("rendering...");
+  await render();
+  console.log("rendered!");
 }
 
 async function pointerEventHandler(event: PointerEvent | null) {
@@ -122,7 +158,8 @@ async function pointerEventHandler(event: PointerEvent | null) {
 
     // pen mode
     if(currentlyDrawing && currentDrawingMode === DrawingMode.PEN) {
-      result = await drawPen({ toX: e.clientX, toY: e.clientY, fromX: lastX, fromY: lastY, color: penColor, size: penSize });
+      //result = await drawPen({ toX: e.clientX, toY: e.clientY, fromX: lastX, fromY: lastY, color: penColor, size: penSize });
+      await pushRawMousePoint(e.clientX, e.clientY);
     }
 
     // eraser mode
@@ -209,8 +246,10 @@ async function handleAppShortcuts(event: KeyboardEvent | null) {
       // clear the canvas
       await clearCanvas();
       break;
-    case 't': // test
-      console.log("test")
+    case 't':
+      penQuality += 1
+      console.log("Pen quality increased to " + penQuality);
+      break;
     default:
       break;
   }

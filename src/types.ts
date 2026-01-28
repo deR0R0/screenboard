@@ -10,20 +10,12 @@ enum DrawingMode {
 
 type Action = {
     type: DrawingMode;
-    points: [
-        { x: number; y: number; },
-        { x: number; y: number; }
-    ];
     timestamp: number;
 }
 
 type PenAction = Action & {
     type: DrawingMode.PEN;
-    points: [
-        { x: number; y: number; },
-        { x: number; y: number; },
-        ...Array<{ x: number; y: number; }>
-    ];
+    points: Array<{ x: number; y: number; }>;
     color: string;
     size: number;
 }

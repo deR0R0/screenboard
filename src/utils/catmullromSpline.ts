@@ -14,10 +14,10 @@ async function cubicBezierAt(params: SplineParams): Promise<{ x: number; y: numb
 }
 
 // this function will actually get all the points along the cubic bezier curve
-// spaced by distance: most likely based on pen size (i think 1/3 of pen size)
-async function cubicBezier(params: SplineParams, size: number): Promise<Array<{ x: number; y: number; }>> {
+// spaced by distance: most likely based on pen size
+async function cubicBezier(params: SplineParams, size: number, quality: number = 3): Promise<Array<{ x: number; y: number; }>> {
     const points: Array<{ x: number; y: number; }> = [];
-    const step: number = 1 / (size * 3);
+    const step: number = 1 / (size * quality);
     for(let t = 0; t <= 1; t += step) {
         const point = await cubicBezierAt({ ...params, time: t });
         points.push(point);
@@ -26,7 +26,7 @@ async function cubicBezier(params: SplineParams, size: number): Promise<Array<{ 
 }
 
 // takes in a list of raw mouse points and returns a smoothed list of points using the Catmull-Rom spline algorithm
-async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: number): Promise<Array<{ x: number; y: number; }>> {
+async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: number, quality: number = 3): Promise<Array<{ x: number; y: number; }>> {
     const smoothedPoints: Array<{ x: number; y: number; }> = [];
     // first, duplicate the starting and ending points of the mouse points array
     points.unshift(points[0]);
@@ -56,7 +56,7 @@ async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: 
             controlPoint1: cp1,
             controlPoint2: cp2,
             endingPoint: p2,
-        }, size);
+        }, size, quality);
 
         // append bezier points to smoothed points array
         // skip the last point to avoid duplicates
