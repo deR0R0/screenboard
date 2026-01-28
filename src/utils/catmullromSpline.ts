@@ -15,13 +15,38 @@ async function cubicBezierAt(params: SplineParams): Promise<{ x: number; y: numb
 
 // this function will actually get all the points along the cubic bezier curve
 // spaced by distance: most likely based on pen size
-async function cubicBezier(params: SplineParams, size: number, quality: number = 3): Promise<Array<{ x: number; y: number; }>> {
+async function cubicBezier(params: SplineParams, size: number, quality: number = 1): Promise<Array<{ x: number; y: number; }>> {
     const points: Array<{ x: number; y: number; }> = [];
-    const step: number = 1 / (size * quality);
-    for(let t = 0; t <= 1; t += step) {
-        const point = await cubicBezierAt({ ...params, time: t });
-        points.push(point);
+    const step: number = 0.1 ** quality;
+    const spacing: number = size / 2;
+    
+    let lastPoint = await cubicBezierAt({ ...params, time: 0 });
+    let currentTime = 0;
+
+    points.push(lastPoint);
+
+    let distanceFromLastPoint = 0;
+
+    while(currentTime < 1) {
+        currentTime = Math.min(1, currentTime + step);
+
+        const point = await cubicBezierAt({ ...params, time: currentTime });
+
+        const dx = point.x - lastPoint.x;
+        const dy = point.y - lastPoint.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        distanceFromLastPoint += distance;
+
+        if(distanceFromLastPoint >= spacing) {
+            points.push(point);
+            distanceFromLastPoint = 0;
+        }
+        
+        lastPoint = point;
     }
+    
+    
     return points;
 }
 
@@ -34,7 +59,7 @@ async function nextParameterIndex(currentIndex: number, p0: { x: number; y: numb
 }
 
 // takes in a list of raw mouse points and returns a smoothed list of points using the Catmull-Rom spline algorithm
-async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: number, quality: number = 3): Promise<Array<{ x: number; y: number; }>> {
+async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: number, quality: number = 1): Promise<Array<{ x: number; y: number; }>> {
     const smoothedPoints: Array<{ x: number; y: number; }> = [];
     // first, duplicate the starting and ending points of the mouse points array
     points.unshift(points[0]);
@@ -87,7 +112,7 @@ async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: 
     }
 
     // finally, add the last point
-    smoothedPoints.push(points[points.length - 2]);
+    //smoothedPoints.push(points[points.length - 2]);
 
     return smoothedPoints;
 }

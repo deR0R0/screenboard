@@ -13,7 +13,7 @@ var currentlyDrawing: boolean = false;
 var currentDrawingMode: DrawingMode = DrawingMode.PEN;
 var penSize: number = 5;
 var penColor: string = "white";
-var penQuality: number = 3;
+var penQuality: number = 2;
 
 // cemented history
 var cementedHistory: Action[] = [];
