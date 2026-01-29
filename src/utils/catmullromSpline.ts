@@ -18,7 +18,7 @@ async function cubicBezierAt(params: SplineParams): Promise<{ x: number; y: numb
 async function cubicBezier(params: SplineParams, size: number, quality: number = 1): Promise<Array<{ x: number; y: number; }>> {
     const points: Array<{ x: number; y: number; }> = [];
     const step: number = 0.1 ** quality;
-    const spacing: number = size / 2;
+    const spacing: number = size / (2 * quality);
     
     let lastPoint = await cubicBezierAt({ ...params, time: 0 });
     let currentTime = 0;
