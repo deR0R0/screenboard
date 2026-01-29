@@ -1,12 +1,3 @@
-interface PenParams {
-  toX: number;
-  toY: number;
-  fromX: number | null;
-  fromY: number | null;
-  color: string;
-  size?: number;
-}
-
 const rawMousePoints: Array<{ x: number; y: number; }> = [];
 
 async function pushRawMousePoint(x: number, y: number): Promise<void> {
@@ -43,4 +34,3 @@ async function renderPen(splinePoints: Array<{ x: number; y: number; }>, color: 
 }
 
 export { renderPen, pushRawMousePoint, clearRawMousePoints, getRawMousePoints };
-export type { PenParams };
