@@ -1,22 +1,19 @@
-const rawMousePoints: Array<{ x: number; y: number; }> = [];
+import { DrawingMode, PenAction } from "../types";
 
-async function pushRawMousePoint(x: number, y: number): Promise<void> {
-  rawMousePoints.push({ x, y });
-}
-
-async function clearRawMousePoints(): Promise<Array<{ x: number; y: number; }>> {
-  const points = [...rawMousePoints];
-  rawMousePoints.length = 0;
-  return points;
-}
-
-async function getRawMousePoints(): Promise<Array<{ x: number; y: number; }>> {
-  return rawMousePoints;
+// pen action
+async function createPenAction(initialPoint: { x: number; y: number; }, color: string, size: number): Promise<PenAction> {
+  const penAction: PenAction = {
+    type: DrawingMode.PEN,
+    points: [initialPoint],
+    color: color,
+    size: size,
+    timestamp: Date.now()
+  }
+  return penAction;
 }
 
 // render
-async function renderPen(splinePoints: Array<{ x: number; y: number; }>, color: string, size?: number): Promise<void> {
-  const canvas = document.getElementById("board") as HTMLCanvasElement;
+async function renderPen(splinePoints: Array<{ x: number; y: number; }>, color: string, canvas: HTMLCanvasElement, size?: number): Promise<void> {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     console.warn("Can't get canvas context");
@@ -33,4 +30,4 @@ async function renderPen(splinePoints: Array<{ x: number; y: number; }>, color: 
   }
 }
 
-export { renderPen, pushRawMousePoint, clearRawMousePoints, getRawMousePoints };
+export { renderPen, createPenAction };

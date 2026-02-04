@@ -39,6 +39,9 @@ async function setupWindow() {
   const canvas = document.getElementById("board") as HTMLCanvasElement;
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  const activeCanvas = document.getElementById("active-board") as HTMLCanvasElement;
+  activeCanvas.width = window.innerWidth;
+  activeCanvas.height = window.innerHeight;
 }
 
 export { setupWindow, setIgnoreCursorEvents, clickThruShortcut, isIgnoringMouseEvents };

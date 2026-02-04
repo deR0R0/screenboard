@@ -60,10 +60,14 @@ async function nextParameterIndex(currentIndex: number, p0: { x: number; y: numb
 
 // takes in a list of raw mouse points and returns a smoothed list of points using the Catmull-Rom spline algorithm
 async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: number, quality: number = 1): Promise<Array<{ x: number; y: number; }>> {
+    // make sure there are at least 2 points
+    if(points.length < 2) {
+        return points.slice();
+    }
+
     const smoothedPoints: Array<{ x: number; y: number; }> = [];
     // first, duplicate the starting and ending points of the mouse points array
-    points.unshift(points[0]);
-    points.push(points[points.length - 1]);
+    points = [points[0], ...points, points[points.length - 1]];
 
     // run through each set of 4 points and generate cubic bezier curves between them
     for(let i = 0; i < points.length - 3; i++) {
