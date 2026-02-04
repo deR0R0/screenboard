@@ -18,10 +18,6 @@ var penQuality: number = 2;
 var cementedHistory: Action[] = [];
 var activeState: Action[] = [];
 
-// track previous position for smooth line drawing
-var lastX: number | null = null;
-var lastY: number | null = null;
-
 // track mouse position for other functions
 var mouseX: number = 0;
 var mouseY: number = 0;
@@ -141,10 +137,6 @@ async function mouseUpHandler() {
       cementedHistory.push(activeState.pop()!);
     }
   }
-
-  // reset the last positions :-)
-  lastX = null;
-  lastY = null;
 
   await releaseToolbar();
 
