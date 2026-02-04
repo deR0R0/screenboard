@@ -44,7 +44,10 @@ async function render(fromIndex: number = 0) {
     console.warn("Can't get canvas context");
     return;
   }
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if(fromIndex === 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 
   // render cemented history
   for(let i = fromIndex; i < cementedHistory.length; i++) {
@@ -133,7 +136,7 @@ async function mouseUpHandler() {
 
   // render our cemented history for testing
   const time = Date.now();
-  await render();
+  await render(cementedHistory.length - 1);
   console.log("rendered in " + (Date.now() - time) + "ms");
 }
 
