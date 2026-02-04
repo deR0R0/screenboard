@@ -126,9 +126,9 @@ async function mouseUpHandler() {
   await releaseToolbar();
 
   // render our cemented history for testing
-  console.log("rendering...");
+  const time = Date.now();
   await render();
-  console.log("rendered!");
+  console.log("rendered in " + (Date.now() - time) + "ms");
 }
 
 async function pointerEventHandler(event: PointerEvent | null) {
