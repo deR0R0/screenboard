@@ -46,6 +46,11 @@ async function cubicBezier(params: SplineParams, size: number, quality: number =
         lastPoint = point;
     }
     
+    // ensure the ending point is always included
+    if(points.length === 0 || points[points.length - 1].x !== params.endingPoint.x || points[points.length - 1].y !== params.endingPoint.y) {
+        points.push(params.endingPoint);
+    }
+    
     
     return points;
 }
@@ -112,7 +117,11 @@ async function catmullromSpline(points: Array<{ x: number; y: number; }>, size: 
 
         // append bezier points to smoothed points array
         // skip the last point to avoid duplicates
-        smoothedPoints.push(...bezierPoints.slice(0, -1));
+        if(bezierPoints.length <= 1) {
+            smoothedPoints.push(...bezierPoints);
+        } else {
+            smoothedPoints.push(...bezierPoints.slice(0, -1));
+        }
     }
 
     // finally, add the last point

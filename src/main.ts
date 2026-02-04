@@ -124,6 +124,8 @@ async function mouseDownHandler(event: MouseEvent | null) {
   if(action) {
     activeState.push(action);
   }
+
+  await renderActive();
 }
 
 async function mouseUpHandler() {
