@@ -20,5 +20,11 @@ type PenAction = Action & {
     size: number;
 }
 
+type EraserAction = Action & {
+    type: DrawingMode.ERASER;
+    points: Array<{ x: number; y: number; }>;
+    size: number;
+}
+
 export { DrawingMode };
-export type { Action, PenAction };
+export type { Action, PenAction, EraserAction };

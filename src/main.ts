@@ -1,10 +1,10 @@
 import { setupWindow, clickThruShortcut } from "./window";
 import { register } from "@tauri-apps/plugin-global-shortcut";
 import { renderPen, createPenAction } from "./tools/pen";
-import { eraseAt } from "./tools/eraser";
+import { renderErase, createEraserAction } from "./tools/eraser";
 import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar, toggleToolbar } from "./toolbar";
 import { DrawingMode } from "./types";
-import type { Action, PenAction } from "./types";
+import type { Action, EraserAction, PenAction } from "./types";
 import { catmullromSpline } from "./utils/catmullromSpline";
 
 // drawing config
@@ -16,7 +16,7 @@ var penQuality: number = 2;
 
 // cemented history
 var cementedHistory: Action[] = [];
-var activeState: Action[] = []; // TODO: implement active state along with the active canvas
+var activeState: Action[] = [];
 
 // track previous position for smooth line drawing
 var lastX: number | null = null;
@@ -26,6 +26,10 @@ var lastY: number | null = null;
 var mouseX: number = 0;
 var mouseY: number = 0;
 
+
+// TODO: OPTIMIZATION BY CHUNKING THE ACTIONS WHEN THEY GET TOO LONG!
+
+
 async function renderAction(action: Action, canvas: HTMLCanvasElement) {
   if(action.type === DrawingMode.PEN) {
     const penAction = action as PenAction;
@@ -33,6 +37,13 @@ async function renderAction(action: Action, canvas: HTMLCanvasElement) {
     const splinePoints = await catmullromSpline(penAction.points, penSize, penQuality);
     // render the pen action
     await renderPen(splinePoints, penAction.color, canvas, penAction.size);
+  }
+
+  // same process as pen
+  if(action.type === DrawingMode.ERASER) {
+    const eraserAction = action as EraserAction;
+    const splinePoints = await catmullromSpline(eraserAction.points, eraserAction.size, penQuality);
+    await renderErase(splinePoints, eraserAction.size, canvas);
   }
 }
 
@@ -67,7 +78,13 @@ async function renderActive() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   for(const action of activeState) {
-    console.log("rendering active action", action);
+    // if it's an eraser action, then
+    // we just render it directly on 
+    // the concreted canvas
+    if(action.type === DrawingMode.ERASER) {
+      await renderAction(action, document.getElementById("board") as HTMLCanvasElement);
+      continue;
+    }
     await renderAction(action, canvas);
   }
 }
@@ -92,8 +109,6 @@ async function mouseDownHandler(event: MouseEvent | null) {
   // drawing stuff
   currentlyDrawing = true;
 
-  let result = undefined;
-
   let action: Action | null = null;
 
   if(currentDrawingMode === DrawingMode.PEN) {
@@ -105,12 +120,8 @@ async function mouseDownHandler(event: MouseEvent | null) {
   }
 
   if(currentDrawingMode === DrawingMode.ERASER) {
-    result = await eraseAt(event!.clientX, event!.clientY, lastX, lastY, penSize);
-  }
-
-  if(result) {
-    lastX = result.lastX;
-    lastY = result.lastY;
+    const eraserAction: EraserAction = await createEraserAction({ x: event!.clientX, y: event!.clientY }, penSize);
+    action = eraserAction;
   }
 
   // add to active state
@@ -125,7 +136,10 @@ async function mouseUpHandler() {
 
   // pop active state into cemented history
   if(activeState[activeState.length - 1] !== undefined) {
-    cementedHistory.push(activeState.pop()!);
+    console.log(activeState);
+    while(activeState.length > 0) {
+      cementedHistory.push(activeState.pop()!);
+    }
   }
 
   // reset the last positions :-)
@@ -136,7 +150,7 @@ async function mouseUpHandler() {
 
   // render our cemented history for testing
   const time = Date.now();
-  await render(cementedHistory.length - 1);
+  await render(cementedHistory.length - 1); // make sure to only render the last action for max optimization
   console.log("rendered in " + (Date.now() - time) + "ms");
 }
 
@@ -158,8 +172,6 @@ async function pointerEventHandler(event: PointerEvent | null) {
       cursor.style.transform = `translate(${e.clientX - cursor.offsetWidth / 2}px, ${e.clientY - cursor.offsetHeight / 2}px)`;
     }
 
-    let result = undefined;
-
     if(await isDraggingToolbar()) {
       // move ze toolbar
       await moveToolbar(e.clientX, e.clientY);
@@ -171,20 +183,16 @@ async function pointerEventHandler(event: PointerEvent | null) {
       // push point to active state
       const lastAction = activeState[activeState.length - 1] as PenAction;
       lastAction.points.push({ x: e.clientX, y: e.clientY });
-
-      // render active state
-      await renderActive();
     }
 
     // eraser mode
     if(currentlyDrawing && currentDrawingMode === DrawingMode.ERASER) {
-      result = await eraseAt(e.clientX, e.clientY, lastX, lastY, penSize);
+      const lastAction = activeState[activeState.length - 1] as EraserAction;
+      lastAction.points.push({ x: e.clientX, y: e.clientY });
     }
 
-    if(result) {
-      lastX = result.lastX;
-      lastY = result.lastY;
-    }
+    // render active state
+    await renderActive();
   }
 }
 
