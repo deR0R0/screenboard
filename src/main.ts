@@ -14,8 +14,9 @@ var penSize: number = 5;
 var penColor: string = "white";
 var penQuality: number = 2;
 
-// cemented history
+// history
 var cementedHistory: Action[] = [];
+var redoHistory: Action[] = [];
 var activeState: Action[] = [];
 
 // track mouse position for other functions
@@ -85,6 +86,28 @@ async function renderActive() {
   }
 }
 
+async function undo() {
+  // check for empty history
+  if(cementedHistory.length === 0) {
+    return;
+  }
+
+  // pop from cemented to redo
+  redoHistory.push(cementedHistory.pop()!);
+
+  // re-render
+  await render();
+}
+
+async function redo() {
+  // same as undo but opposite
+  if(redoHistory.length === 0) {
+    return;
+  }
+  cementedHistory.push(redoHistory.pop()!);
+  await render();
+}
+
 async function mouseDownHandler(event: MouseEvent | null) {
   // prevent drawing or other of any kind before moving toolbar
   if((event?.target as HTMLElement).closest("#drag-region")) {
@@ -141,6 +164,9 @@ async function mouseUpHandler() {
   }
 
   await releaseToolbar();
+
+  // clear the redo history
+  redoHistory = [];
 
   // render our cemented history for testing
   const time = Date.now();
@@ -248,25 +274,21 @@ async function switchToEraserMode() {
   console.log("Switched to eraser mode");
 }
 
-async function handleAppShortcuts(event: KeyboardEvent | null) {
-  if(event === null) return;
-  
-  switch(event.key) {
+async function handleAppShortcuts(event: KeyboardEvent) {
+  // switch between pen and eraser
+  switch (event.key.toLowerCase()) {
     case "a":
       await switchToPenMode();
       break;
-    case "s":
+    case "e":
       await switchToEraserMode();
       break;
-    case 'z':
-      // clear the canvas
-      await clearCanvas();
-      break;
-    case 't':
-      penQuality += 1
-      console.log("Pen quality increased to " + penQuality);
-      break;
-    default:
+    case "z":
+      if(event.shiftKey && (event.ctrlKey || event.metaKey)) {
+        await redo();
+      } else if(event.ctrlKey || event.metaKey) {
+        await undo();
+      }
       break;
   }
 }
