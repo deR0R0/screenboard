@@ -216,15 +216,6 @@ async function pointerEventHandler(event: PointerEvent | null) {
   }
 }
 
-async function clearCanvas() {
-  const canvas = document.getElementById("board") as HTMLCanvasElement;
-  const ctx = canvas.getContext("2d");
-  if (ctx) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    console.log("Cleared the canvas");
-  }
-}
-
 async function resizeCursor() {
   // update cursor size visually
   const cursor = document.getElementById("cursor") as HTMLDivElement;
