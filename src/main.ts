@@ -2,7 +2,7 @@ import { setupWindow, clickThruShortcut } from "./window";
 import { register, ShortcutEvent } from "@tauri-apps/plugin-global-shortcut";
 import { renderPen, createPenAction } from "./tools/pen";
 import { renderErase, createEraserAction } from "./tools/eraser";
-import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar, toggleToolbar } from "./toolbar";
+import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar, setupToolbar, toggleToolbar } from "./toolbar";
 import { DrawingMode } from "./types";
 import type { Action, EraserAction, PenAction } from "./types";
 import { catmullromSpline } from "./utils/catmullromSpline";
@@ -294,7 +294,7 @@ async function handleAppShortcuts(event: KeyboardEvent) {
     case "a":
       await swapTool(DrawingMode.PEN);
       break;
-    case "e":
+    case "s":
       await swapTool(DrawingMode.ERASER);
       break;
     case "z":
@@ -338,6 +338,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   // create our shortcuts
   register('F6', (event: ShortcutEvent) => { clickThruShortcut(event); toggleCursorVisibility(event); });
   document.addEventListener("keydown", handleAppShortcuts);
+
+  await setupToolbar();
 
   // create our event handlers
   await on("swapTool", async (tool: DrawingMode) => {

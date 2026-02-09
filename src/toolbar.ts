@@ -99,4 +99,4 @@ async function setupToolbar() {
     })
 }
 
-export { selectToolbar, moveToolbar, releaseToolbar, isDraggingToolbar, toggleToolbar };
+export { selectToolbar, moveToolbar, releaseToolbar, isDraggingToolbar, toggleToolbar, setupToolbar };
