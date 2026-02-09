@@ -1,11 +1,12 @@
 import { setupWindow, clickThruShortcut } from "./window";
-import { register } from "@tauri-apps/plugin-global-shortcut";
+import { register, ShortcutEvent } from "@tauri-apps/plugin-global-shortcut";
 import { renderPen, createPenAction } from "./tools/pen";
 import { renderErase, createEraserAction } from "./tools/eraser";
 import { isDraggingToolbar, moveToolbar, releaseToolbar, selectToolbar, toggleToolbar } from "./toolbar";
 import { DrawingMode } from "./types";
 import type { Action, EraserAction, PenAction } from "./types";
 import { catmullromSpline } from "./utils/catmullromSpline";
+import { on } from "./events";
 
 // drawing config
 var currentlyDrawing: boolean = false;
@@ -31,7 +32,7 @@ async function renderAction(action: Action, canvas: HTMLCanvasElement) {
   if(action.type === DrawingMode.PEN) {
     const penAction = action as PenAction;
     // run the catmull-rom spline on the mouse points
-    const splinePoints = await catmullromSpline(penAction.points, penSize, penQuality);
+    const splinePoints = await catmullromSpline(penAction.points, penAction.size, penQuality);
     // render the pen action
     await renderPen(splinePoints, penAction.color, canvas, penAction.size);
   }
@@ -41,6 +42,14 @@ async function renderAction(action: Action, canvas: HTMLCanvasElement) {
     const eraserAction = action as EraserAction;
     const splinePoints = await catmullromSpline(eraserAction.points, eraserAction.size, penQuality);
     await renderErase(splinePoints, eraserAction.size, canvas);
+  }
+
+  // clear
+  if(action.type === DrawingMode.CLEAR) {
+    const ctx = canvas.getContext("2d");
+    if(ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   }
 }
 
@@ -157,7 +166,6 @@ async function mouseUpHandler() {
 
   // pop active state into cemented history
   if(activeState[activeState.length - 1] !== undefined) {
-    console.log(activeState);
     while(activeState.length > 0) {
       cementedHistory.push(activeState.pop()!);
     }
@@ -216,6 +224,21 @@ async function pointerEventHandler(event: PointerEvent | null) {
   }
 }
 
+async function toggleCursorVisibility(event?: ShortcutEvent | null) {
+  if(event && event.state !== "Pressed") {
+    return; // skip released
+  }
+
+  const cursor = document.getElementById("cursor") as HTMLDivElement;
+  if(cursor) {
+    if(cursor.style.display === "none") {
+      cursor.style.display = "block";
+    } else {
+      cursor.style.display = "none";
+    }
+  }
+}
+
 async function resizeCursor() {
   // update cursor size visually
   const cursor = document.getElementById("cursor") as HTMLDivElement;
@@ -253,26 +276,26 @@ async function setPenSize(size: number) {
   console.log("Set pen size to " + penSize);
 }
 
-async function switchToPenMode() {
-  currentDrawingMode = DrawingMode.PEN;
-  await changeCursorAppearance("100%", `color-mix(in srgb, ${penColor} 80%, white)`, "1px", penColor);
-  console.log("Switched to pen mode");
-}
+async function swapTool(tool: DrawingMode) {
+  currentDrawingMode = tool;
 
-async function switchToEraserMode() {
-  currentDrawingMode = DrawingMode.ERASER;
-  await changeCursorAppearance("50%", "white", "1px", "transparent");
-  console.log("Switched to eraser mode");
+  if(tool === DrawingMode.PEN) {
+    await changeCursorAppearance("100%", `color-mix(in srgb, ${penColor} 80%, white)`, "1px", penColor);
+  } else if(tool === DrawingMode.ERASER) {
+    await changeCursorAppearance("50%", "white", "1px", "transparent");
+  } else {
+    await changeCursorAppearance("0%", "transparent", "0px", "transparent");
+  }
 }
 
 async function handleAppShortcuts(event: KeyboardEvent) {
   // switch between pen and eraser
   switch (event.key.toLowerCase()) {
     case "a":
-      await switchToPenMode();
+      await swapTool(DrawingMode.PEN);
       break;
     case "e":
-      await switchToEraserMode();
+      await swapTool(DrawingMode.ERASER);
       break;
     case "z":
       if(event.shiftKey && (event.ctrlKey || event.metaKey)) {
@@ -284,10 +307,21 @@ async function handleAppShortcuts(event: KeyboardEvent) {
   }
 }
 
+async function clearCanvas() {
+  // not a real clear. it's just an action lol
+  const clearAction: Action = {
+    type: DrawingMode.CLEAR,
+    timestamp: Date.now(),
+  };
+
+  cementedHistory.push(clearAction);
+  await render(cementedHistory.length - 1);
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   await setupWindow();
   await resizeCursor();
-  await switchToPenMode();
+  await swapTool(DrawingMode.PEN);
   // create drawing stuff
   document.addEventListener("mousedown", mouseDownHandler);
   document.addEventListener("pointermove", pointerEventHandler);
@@ -302,6 +336,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   
   // create our shortcuts
-  register('F6', clickThruShortcut);
+  register('F6', (event: ShortcutEvent) => { clickThruShortcut(event); toggleCursorVisibility(event); });
   document.addEventListener("keydown", handleAppShortcuts);
+
+  // create our event handlers
+  await on("swapTool", async (tool: DrawingMode) => {
+    await swapTool(tool);
+  });
+  await on("clearCanvas", clearCanvas);
 });

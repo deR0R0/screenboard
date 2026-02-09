@@ -1,4 +1,6 @@
 import gsap from "gsap";
+import { emit } from "./events";
+import { DrawingMode } from "./types";
 
 var isSelected: boolean = false;
 var isOpen: boolean = true;
@@ -70,6 +72,31 @@ async function toggleToolbar() {
         }, [], "<");
         tl.to("#open-toolbox", {y: 0, duration: 0.25, ease: "power3.out"}, "<+=0.25");
     }
+}
+
+// this method is to create listeners on every button
+async function setupToolbar() {
+    const buttons = document.querySelectorAll(".toolbar-button");
+
+    buttons.forEach((button) => {
+        button.addEventListener("click", async () => {
+            const action = button.getAttribute("data-action");
+            switch(action) {
+                case "toggle-toolbar":
+                    await toggleToolbar();
+                    break;
+                case "select-pen":
+                    await emit("swapTool", DrawingMode.PEN);
+                    break;
+                case "select-eraser":
+                    await emit("swapTool", DrawingMode.ERASER);
+                    break;
+                case "clear":
+                    await emit("clearCanvas");
+                    break;
+            }
+        });
+    })
 }
 
 export { selectToolbar, moveToolbar, releaseToolbar, isDraggingToolbar, toggleToolbar };

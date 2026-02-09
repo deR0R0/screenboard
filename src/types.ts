@@ -4,8 +4,7 @@ enum DrawingMode {
   PEN,
   FOUNTAIN_PEN,
   ERASER,
-  SQUARE,
-  ELLIPSE,
+  CLEAR,
 }
 
 type Action = {
@@ -26,5 +25,9 @@ type EraserAction = Action & {
     size: number;
 }
 
+type ClearAction = Action & {
+    type: DrawingMode.CLEAR;
+}
+
 export { DrawingMode };
-export type { Action, PenAction, EraserAction };
+export type { Action, PenAction, EraserAction, ClearAction };
